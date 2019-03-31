@@ -174,6 +174,7 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
   char fencechar[2] = {'\0', '\0'};
   size_t info_len, code_len;
   char listmarker[LISTMARKER_SIZE];
+  cmark_emphasis_type emph_type;
   char *emph_delim;
   bool first_in_list_item;
   bufsize_t marker_width;
@@ -394,22 +395,28 @@ static int S_render_node(cmark_renderer *renderer, cmark_node *node,
     break;
 
   case CMARK_NODE_STRONG:
+    emph_type = cmark_node_get_emphasis_type(node);
+    emph_delim = (emph_type == CMARK_ASTERISK_EMPHASIS) ? "**" : "__";
     if (entering) {
-      LIT("**");
+      LIT(emph_delim);
     } else {
-      LIT("**");
+      LIT(emph_delim);
     }
     break;
 
   case CMARK_NODE_EMPH:
-    // If we have EMPH(EMPH(x)), we need to use *_x_*
-    // because **x** is STRONG(x):
+    // If we have EMPH(EMPH(x)) and if both nodes have the same emphasis type,
+    // we need to flip the emphasis type because "**" or "__" would be
+    // STRONG(x). (This won't happen from nodes parsed from text, but it could
+    // happen for nodes created programmatically.)
+    emph_type = cmark_node_get_emphasis_type(node);
     if (node->parent && node->parent->type == CMARK_NODE_EMPH &&
+        cmark_node_get_emphasis_type(node->parent) == emph_type &&
         node->next == NULL && node->prev == NULL) {
-      emph_delim = "_";
-    } else {
-      emph_delim = "*";
+      emph_type = (emph_type == CMARK_ASTERISK_EMPHASIS)
+        ? CMARK_UNDERSCORE_EMPHASIS : CMARK_ASTERISK_EMPHASIS;
     }
+    emph_delim = (emph_type == CMARK_ASTERISK_EMPHASIS) ? "*" : "_";
     if (entering) {
       LIT(emph_delim);
     } else {

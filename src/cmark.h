@@ -83,6 +83,12 @@ typedef enum {
   CMARK_PAREN_DELIM
 } cmark_delim_type;
 
+typedef enum {
+  CMARK_NO_EMPHASIS,
+  CMARK_ASTERISK_EMPHASIS,
+  CMARK_UNDERSCORE_EMPHASIS
+} cmark_emphasis_type;
+
 typedef struct cmark_node cmark_node;
 typedef struct cmark_parser cmark_parser;
 typedef struct cmark_iter cmark_iter;
@@ -355,6 +361,16 @@ CMARK_EXPORT const char *cmark_node_get_title(cmark_node *node);
  * 0 on failure.
  */
 CMARK_EXPORT int cmark_node_set_title(cmark_node *node, const char *title);
+
+/** Returns the emphasis type of 'node', or `CMARK_NO_EMPHASIS` if 'node' is not
+ * a list.
+ */
+CMARK_EXPORT cmark_emphasis_type cmark_node_get_emphasis_type(cmark_node *node);
+
+/** Sets the emphasis type of 'node', returning 1 on success and 0 on error.
+ */
+CMARK_EXPORT int cmark_node_set_emphasis_type(cmark_node *node,
+                                              cmark_emphasis_type emphasis);
 
 /** Returns the literal "on enter" text for a custom 'node', or
     an empty string if no on_enter is set.  Returns NULL if called

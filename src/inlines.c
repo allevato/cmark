@@ -724,6 +724,9 @@ static delimiter *S_insert_emph(subject *subj, delimiter *opener,
   // create new emph or strong, and splice it in to our inlines
   // between the opener and closer
   emph = use_delims == 1 ? make_emph(subj->mem) : make_strong(subj->mem);
+  emph->as.emphasis.emphasis_type =
+    (opener->delim_char == '*') ? CMARK_ASTERISK_EMPHASIS
+                                : CMARK_UNDERSCORE_EMPHASIS;
 
   tmp = opener_inl->next;
   while (tmp && tmp != closer_inl) {

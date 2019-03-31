@@ -42,6 +42,10 @@ typedef struct {
 } cmark_link;
 
 typedef struct {
+  cmark_emphasis_type emphasis_type;
+} cmark_emphasis;
+
+typedef struct {
   cmark_chunk on_enter;
   cmark_chunk on_exit;
 } cmark_custom;
@@ -77,6 +81,7 @@ struct cmark_node {
     cmark_code code;
     cmark_heading heading;
     cmark_link link;
+    cmark_emphasis emphasis;
     cmark_custom custom;
     int html_block_type;
   } as;

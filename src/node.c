@@ -90,6 +90,11 @@ cmark_node *cmark_node_new_with_mem(cmark_node_type type, cmark_mem *mem) {
     break;
   }
 
+  case CMARK_NODE_EMPH:
+  case CMARK_NODE_STRONG:
+    node->as.emphasis.emphasis_type = CMARK_ASTERISK_EMPHASIS;
+    break;
+
   default:
     break;
   }
@@ -541,6 +546,37 @@ int cmark_node_set_title(cmark_node *node, const char *title) {
   }
 
   return 0;
+}
+
+cmark_emphasis_type cmark_node_get_emphasis_type(cmark_node *node) {
+  if (node == NULL) {
+    return CMARK_NO_EMPHASIS;
+  }
+
+  if (node->type == CMARK_NODE_EMPH || node->type == CMARK_NODE_STRONG) {
+    return node->as.emphasis.emphasis_type;
+  } else {
+    return CMARK_NO_EMPHASIS;
+  }
+}
+
+int cmark_node_set_emphasis_type(cmark_node *node,
+                                 cmark_emphasis_type emphasis) {
+  if (!(emphasis == CMARK_ASTERISK_EMPHASIS ||
+        emphasis == CMARK_UNDERSCORE_EMPHASIS)) {
+    return 0;
+  }
+
+  if (node == NULL) {
+    return 0;
+  }
+
+  if (node->type == CMARK_NODE_EMPH || node->type == CMARK_NODE_STRONG) {
+    node->as.emphasis.emphasis_type = emphasis;
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 const char *cmark_node_get_on_enter(cmark_node *node) {

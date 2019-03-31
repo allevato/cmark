@@ -697,6 +697,76 @@ static void render_commonmark(test_batch_runner *runner) {
   cmark_node_free(doc);
 }
 
+static void render_commonmark_preserving(test_batch_runner *runner) {
+  char *commonmark;
+  cmark_node *text;
+  cmark_node *emph;
+  cmark_node *outeremph;
+
+  static const char markdown[] = "*asterisk* _underscore_\n"
+                                 "**asterisk** __underscore__\n"
+                                 "_*nested*_ *_nested_*\n"
+                                 "__**nested**__ **__nested__**\n";
+  cmark_node *doc =
+      cmark_parse_document(markdown, sizeof(markdown) - 1, CMARK_OPT_DEFAULT);
+  commonmark = cmark_render_commonmark(doc, CMARK_OPT_DEFAULT, 0);
+
+  STR_EQ(runner, commonmark, "*asterisk* _underscore_\n"
+                             "**asterisk** __underscore__\n"
+                             "_*nested*_ *_nested_*\n"
+                             "__**nested**__ **__nested__**\n",
+         "render document preserving original markup");
+  free(commonmark);
+  cmark_node_free(doc);
+
+  text = cmark_node_new(CMARK_NODE_TEXT);
+  cmark_node_set_literal(text, "Hi");
+  emph = cmark_node_new(CMARK_NODE_EMPH);
+  cmark_node_set_emphasis_type(emph, CMARK_UNDERSCORE_EMPHASIS);
+  cmark_node_append_child(emph, text);
+
+  commonmark = cmark_render_commonmark(emph, CMARK_OPT_DEFAULT, 0);
+  STR_EQ(runner, commonmark, "_Hi_\n", "render emphasis underline");
+  free(commonmark);
+  cmark_node_free(emph);
+
+  text = cmark_node_new(CMARK_NODE_TEXT);
+  cmark_node_set_literal(text, "Hi");
+  emph = cmark_node_new(CMARK_NODE_STRONG);
+  cmark_node_set_emphasis_type(emph, CMARK_UNDERSCORE_EMPHASIS);
+  cmark_node_append_child(emph, text);
+
+  commonmark = cmark_render_commonmark(emph, CMARK_OPT_DEFAULT, 0);
+  STR_EQ(runner, commonmark, "__Hi__\n", "render strong underline");
+  free(commonmark);
+  cmark_node_free(emph);
+
+  text = cmark_node_new(CMARK_NODE_TEXT);
+  cmark_node_set_literal(text, "Hi");
+  emph = cmark_node_new(CMARK_NODE_EMPH);
+  cmark_node_append_child(emph, text);
+  outeremph = cmark_node_new(CMARK_NODE_EMPH);
+  cmark_node_append_child(outeremph, emph);
+
+  commonmark = cmark_render_commonmark(outeremph, CMARK_OPT_DEFAULT, 0);
+  STR_EQ(runner, commonmark, "*_Hi_*\n", "render flipped emphasis default");
+  free(commonmark);
+  cmark_node_free(outeremph);
+
+  text = cmark_node_new(CMARK_NODE_TEXT);
+  cmark_node_set_literal(text, "Hi");
+  emph = cmark_node_new(CMARK_NODE_EMPH);
+  cmark_node_append_child(emph, text);
+  outeremph = cmark_node_new(CMARK_NODE_EMPH);
+  cmark_node_set_emphasis_type(outeremph, CMARK_UNDERSCORE_EMPHASIS);
+  cmark_node_append_child(outeremph, emph);
+
+  commonmark = cmark_render_commonmark(outeremph, CMARK_OPT_DEFAULT, 0);
+  STR_EQ(runner, commonmark, "_*Hi*_\n", "render flipped emphasis explicit");
+  free(commonmark);
+  cmark_node_free(outeremph);
+}
+
 static void utf8(test_batch_runner *runner) {
   // Ranges
   test_char(runner, 1, "\x01", "valid utf8 01");
@@ -1043,6 +1113,7 @@ int main() {
   render_man(runner);
   render_latex(runner);
   render_commonmark(runner);
+  render_commonmark_preserving(runner);
   utf8(runner);
   line_endings(runner);
   numeric_entities(runner);
